@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kynto Manager Enterprise</title>
+    <title>Kynto Manager (Safe Mode)</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -51,12 +51,11 @@
         .card-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75rem; color: #64748b; }
         .btn-card-action { border: none; background: none; color: #ef4444; cursor: pointer; padding: 5px; }
 
-        /* Calendar Fixed */
+        /* Calendar */
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
         .calendar-day-header { text-align: center; color: #94a3b8; font-size: 0.9rem; font-weight: 500; padding-bottom: 10px; }
         .calendar-day { background: rgba(255,255,255,0.05); min-height: 120px; border-radius: 8px; padding: 8px; border: 1px solid transparent; }
-        .calendar-day:hover { border-color: rgba(255,255,255,0.2); }
         .calendar-day.today { border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.1); }
         .cal-event { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 
@@ -72,8 +71,8 @@
         .form-input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; margin-bottom: 15px; }
         .btn-primary { background: var(--accent); color: #0f172a; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-cancel { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-        .btn-google { background: #fff; color: #333; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:12px; border-radius:8px; border:none; cursor:pointer; font-weight:500; margin-bottom:20px; }
-        .btn-google:hover { background: #f1f1f1; }
+        .btn-google { background: #fff; color: #333; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:12px; border-radius:8px; border:none; cursor:pointer; font-weight:500; margin-bottom:20px; opacity: 1; transition: 0.3s; }
+        .btn-google.disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -114,9 +113,12 @@
         </div>
 
         <div id="view-repository" class="view-container">
-            <button class="btn-google" onclick="loadGooglePicker()">
+            <button id="googleBtn" class="btn-google disabled" onclick="loadGooglePicker()">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" width="20">
                 Selecionar do Google Drive
+            </button>
+            <button class="btn-primary" style="margin-bottom:20px" onclick="document.getElementById('fileModal').style.display='flex'">
+                <i class="fa-solid fa-link"></i> Link Manual
             </button>
             <div class="repo-grid" id="fileGrid"></div>
         </div>
@@ -127,11 +129,25 @@
             <h3 id="modalTitle">Tarefa</h3>
             <input type="text" id="taskInput" class="form-input" placeholder="Título...">
             <input type="date" id="dateInput" class="form-input">
-            <input type="hidden" id="statusInput">
-            <input type="hidden" id="editingTaskId">
+            <input type="hidden" id="statusInput"><input type="hidden" id="editingTaskId">
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeModal('taskModal')">Cancelar</button>
                 <button class="btn-primary" onclick="confirmSaveTask()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="fileModal">
+        <div class="modal">
+            <h3>Link Manual</h3>
+            <input type="text" id="fileName" class="form-input" placeholder="Nome do Arquivo">
+            <input type="text" id="fileUrl" class="form-input" placeholder="URL (Link)">
+            <select id="fileType" class="form-input">
+                <option value="doc">Documento</option><option value="sheet">Planilha</option><option value="pdf">PDF</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal('fileModal')">Cancelar</button>
+                <button class="btn-primary" onclick="confirmAddFileManual()">Salvar</button>
             </div>
         </div>
     </div>
@@ -140,87 +156,74 @@
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
     <script>
-        // --- CONFIGURAÇÃO GOOGLE (PREENCHA AQUI!) ---
-        const API_KEY = 'SUA_API_KEY_AQUI'; // <--- COLE AQUI
-        const CLIENT_ID = 'SEU_CLIENT_ID_AQUI'; // <--- COLE AQUI
-        const APP_ID = 'SEU_PROJETO_NUMBER'; // (Opcional, pode deixar em branco se não tiver)
+        // ==========================================================
+        // CONFIGURAÇÃO DO GOOGLE (Preencha quando tiver as chaves)
+        // Enquanto estiverem com "..." o sistema funcionará, mas sem o botão do Drive.
+        // ==========================================================
+        const API_KEY = 'SUA_API_KEY_AQUI'; 
+        const CLIENT_ID = 'SEU_CLIENT_ID_AQUI'; 
+        const APP_ID = ''; 
 
-        // --- ESTADO ---
+        // ESTADO GLOBAL
         let projects = [], currentTasks = [], currentFiles = [];
         let currentProjectId = null;
-        let currentDate = new Date(); // Para o calendário
-
-        // --- GOOGLE PICKER LOGIC ---
-        let tokenClient;
+        let currentDate = new Date();
         let accessToken = null;
-        let pickerInited = false;
-        let gisInited = false;
 
+        // INICIALIZAÇÃO SEGURA
         document.addEventListener('DOMContentLoaded', async () => {
-            // Inicia Google
-            gapi.load('client:picker', () => { pickerInited = true; });
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/drive.readonly',
-                callback: '', // definido depois
-            });
-            gisInited = true;
+            // 1. Carrega o App (Prioridade Máxima)
+            try {
+                await initApp(); 
+            } catch (e) {
+                console.error("Erro fatal ao iniciar app:", e);
+                alert("Erro ao conectar com o servidor.");
+            }
 
-            // Inicia App
-            const res = await fetch('/api/projects');
-            projects = await res.json();
-            renderProjectList();
-            if(projects.length) loadProject(projects[0].id, projects[0].name);
+            // 2. Tenta Iniciar o Google (Sem travar o resto)
+            setTimeout(initGoogle, 1000);
         });
 
-        function loadGooglePicker() {
-            if(!accessToken) {
-                // Pede login
-                tokenClient.callback = async (resp) => {
-                    if (resp.error !== undefined) throw (resp);
-                    accessToken = resp.access_token;
-                    createPicker();
-                };
-                tokenClient.requestAccessToken({prompt: 'consent'});
+        async function initApp() {
+            const res = await fetch('/api/projects');
+            if(!res.ok) throw new Error("Falha na API");
+            projects = await res.json();
+            renderProjectList();
+            
+            if(projects.length > 0) {
+                loadProject(projects[0].id, projects[0].name);
             } else {
-                createPicker();
+                document.getElementById('currentProjectTitle').innerText = "Crie um projeto";
             }
         }
 
-        function createPicker() {
-            const view = new google.picker.View(google.picker.ViewId.DOCS);
-            const picker = new google.picker.PickerBuilder()
-                .enableFeature(google.picker.Feature.NAV_HIDDEN)
-                .setDeveloperKey(API_KEY)
-                .setAppId(APP_ID)
-                .setOAuthToken(accessToken)
-                .addView(view)
-                .setCallback(pickerCallback)
-                .build();
-            picker.setVisible(true);
-        }
+        function initGoogle() {
+            // Verifica se as chaves foram preenchidas
+            if(API_KEY === 'SUA_API_KEY_AQUI' || CLIENT_ID === 'SEU_CLIENT_ID_AQUI') {
+                console.warn("Chaves do Google não configuradas. Botão desativado.");
+                return;
+            }
 
-        async function pickerCallback(data) {
-            if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
-                const doc = data[google.picker.Response.DOCUMENTS][0];
-                const name = doc[google.picker.Document.NAME];
-                const url = doc[google.picker.Document.URL];
-                const type = doc[google.picker.Document.TYPE] === 'folder' ? 'folder' : 'file';
-
-                // Salva no nosso backend
-                await fetch('/api/files', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ projectId: currentProjectId, name, url, type })
+            try {
+                gapi.load('client:picker', () => { console.log('Google API Loaded'); });
+                google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: 'https://www.googleapis.com/auth/drive.readonly',
+                    callback: (resp) => {
+                        if (resp.error) return console.error(resp);
+                        accessToken = resp.access_token;
+                        createPicker();
+                    },
                 });
-                // Recarrega lista
-                const resF = await fetch(`/api/files?projectId=${currentProjectId}`);
-                currentFiles = await resF.json();
-                renderFiles();
+                // Habilita o botão
+                const btn = document.getElementById('googleBtn');
+                btn.classList.remove('disabled');
+            } catch (e) {
+                console.error("Erro ao iniciar Google:", e);
             }
         }
 
-        // --- LÓGICA CORE ---
+        // --- LÓGICA DO APP (KANBAN, CALENDAR) ---
         async function loadProject(id, name) {
             currentProjectId = id;
             document.getElementById('currentProjectTitle').innerText = name;
@@ -232,11 +235,10 @@
             currentTasks = await resT.json();
             currentFiles = await resF.json();
             
-            renderKanban();
-            renderCalendar(); // AGORA VAI FUNCIONAR
-            renderFiles();
+            renderKanban(); renderCalendar(); renderFiles();
         }
 
+        // Kanban Render
         function renderKanban() {
             ['todo', 'progress', 'done'].forEach(s => {
                 const list = document.querySelector(`#col-${s} .task-list`);
@@ -246,121 +248,122 @@
                 tasks.forEach(t => {
                     const card = document.createElement('div');
                     card.className = 'card'; card.setAttribute('data-status', s); card.draggable = true;
-                    card.onclick = (e) => { if(!e.target.closest('.btn-card-action')) openTaskModal(s, t); };
                     card.innerHTML = `<div>${t.title}</div><div class="card-meta"><span>${formatDate(t.due_date)}</span><button class="btn-card-action" onclick="deleteTask(${t.id})">Del</button></div>`;
+                    
+                    card.onclick = (e) => { if(!e.target.closest('.btn-card-action')) openTaskModal(s, t); };
                     card.ondragstart = (ev) => ev.dataTransfer.setData("text/plain", t.id.toString());
                     list.appendChild(card);
                 });
             });
         }
 
-        // --- CALENDÁRIO CONSERTADO ---
+        // Calendar Render
         function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
+            const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+            const year = currentDate.getFullYear(); const month = currentDate.getMonth();
+            const names = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+            document.getElementById('calMonthDisplay').innerText = `${names[month]} ${year}`;
             
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            document.getElementById('calMonthDisplay').innerText = `${monthNames[month]} ${year}`;
-
-            // Headers
-            ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d => grid.innerHTML += `<div class="calendar-day-header">${d}</div>`);
-
+            ['D','S','T','Q','Q','S','S'].forEach(d => grid.innerHTML += `<div class="calendar-day-header">${d}</div>`);
+            
             const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-            // Espaços vazios antes do dia 1
+            const daysInMonth = new Date(year, month+1, 0).getDate();
+            
             for(let i=0; i<firstDay; i++) grid.innerHTML += '<div></div>';
-
-            // Dias
+            
             for(let d=1; d<=daysInMonth; d++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const todayStr = new Date().toISOString().split('T')[0];
                 const dayTasks = currentTasks.filter(t => t.due_date === dateStr);
                 
-                let html = `<div class="calendar-day ${dateStr === todayStr ? 'today' : ''}">
-                    <div style="font-weight:bold; font-size:0.8rem; margin-bottom:5px">${d}</div>`;
-                
+                let html = `<div class="calendar-day ${dateStr===todayStr?'today':''}">
+                    <div style="font-size:0.8rem; margin-bottom:5px; font-weight:bold">${d}</div>`;
                 dayTasks.forEach(t => {
-                    let color = '#f59e0b'; // Laranja
-                    if(t.status === 'progress') color = '#3b82f6'; // Azul
-                    if(t.status === 'done') color = '#10b981'; // Verde
-                    html += `<div class="cal-event" style="background:${color}" onclick="openTaskModal('${t.status}', {id:${t.id}, title:'${t.title}', due_date:'${t.due_date}', status:'${t.status}'})">${t.title}</div>`;
+                     let color = t.status === 'done' ? '#10b981' : (t.status === 'progress' ? '#3b82f6' : '#f59e0b');
+                     html += `<div class="cal-event" style="background:${color}" onclick="openTaskModal('${t.status}', {id:${t.id}, title:'${t.title}', due_date:'${t.due_date}', status:'${t.status}'})">${t.title}</div>`;
                 });
-
-                html += `</div>`;
-                grid.innerHTML += html;
+                grid.innerHTML += html + '</div>';
             }
         }
 
-        // --- AUXILIARES ---
-        function allowDrop(ev) { ev.preventDefault(); }
-        async function drop(ev, newStatus) {
-            ev.preventDefault();
-            const id = ev.dataTransfer.getData("text/plain");
-            const task = currentTasks.find(t => t.id == id);
-            if(task) {
-                task.status = newStatus;
-                await fetch('/api/tasks', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, status: newStatus}) });
-                loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
-            }
+        // Files Render
+        function renderFiles() {
+            const grid = document.getElementById('fileGrid'); grid.innerHTML = '';
+            currentFiles.forEach(f => {
+                const a = document.createElement('a'); a.className = 'file-card'; a.href = f.url; a.target = '_blank';
+                a.innerHTML = `<i class="fa-solid fa-file"></i> <div>${f.name}</div><div class="delete-file" onclick="deleteFile(${f.id}, event)">x</div>`;
+                grid.appendChild(a);
+            });
         }
 
-        function openTaskModal(status, task = null) {
-            document.getElementById('taskModal').style.display = 'flex';
-            document.getElementById('statusInput').value = status;
-            if(task && task.id) {
-                document.getElementById('modalTitle').innerText = "Editar";
-                document.getElementById('taskInput').value = task.title;
-                document.getElementById('dateInput').value = task.due_date;
-                document.getElementById('editingTaskId').value = task.id;
-            } else {
-                document.getElementById('modalTitle').innerText = "Nova";
-                document.getElementById('taskInput').value = "";
-                document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
-                document.getElementById('editingTaskId').value = "";
-            }
-        }
-
+        // --- FUNÇÕES DE AÇÃO ---
         async function confirmSaveTask() {
             const id = document.getElementById('editingTaskId').value;
             const title = document.getElementById('taskInput').value;
             const date = document.getElementById('dateInput').value;
             const status = document.getElementById('statusInput').value;
-            if(!title) return alert("Título necessário");
-
-            if(id) await fetch('/api/tasks', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, title, date}) });
-            else await fetch('/api/tasks', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({projectId: currentProjectId, title, date, status}) });
             
+            if(!title) return alert("Título obrigatório");
+            
+            const body = { id, title, date, status, projectId: currentProjectId };
+            const method = id ? 'PUT' : 'POST';
+            
+            await fetch('/api/tasks', { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
             closeModal('taskModal');
             loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
         }
 
-        async function deleteTask(id) {
-            if(confirm("Apagar?")) {
-                await fetch(`/api/tasks?id=${id}`, { method: 'DELETE' });
-                loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
+        // --- GOOGLE ACTIONS ---
+        function loadGooglePicker() {
+            if(document.getElementById('googleBtn').classList.contains('disabled')) {
+                alert("Configure as Chaves de API no código para usar o Google Drive.");
+                return;
             }
+            const client = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
+                callback: (r) => { accessToken = r.access_token; createPicker(); }
+            });
+            client.requestAccessToken();
         }
 
-        // Navegação
+        function createPicker() {
+            const view = new google.picker.View(google.picker.ViewId.DOCS);
+            const picker = new google.picker.PickerBuilder()
+                .enableFeature(google.picker.Feature.NAV_HIDDEN).setDeveloperKey(API_KEY).setAppId(APP_ID)
+                .setOAuthToken(accessToken).addView(view)
+                .setCallback(async (data) => {
+                    if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+                        const doc = data[google.picker.Response.DOCUMENTS][0];
+                        saveFile(doc.name, doc.url, 'google');
+                    }
+                }).build();
+            picker.setVisible(true);
+        }
+
+        async function confirmAddFileManual() {
+            const name = document.getElementById('fileName').value;
+            const url = document.getElementById('fileUrl').value;
+            if(name && url) await saveFile(name, url, 'manual');
+        }
+
+        async function saveFile(name, url, type) {
+            await fetch('/api/files', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ projectId: currentProjectId, name, url, type }) });
+            closeModal('fileModal');
+            loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
+        }
+
+        // --- UTILITÁRIOS ---
+        async function deleteFile(id, e) { e.preventDefault(); e.stopPropagation(); if(confirm('Excluir?')) await fetch(`/api/files?id=${id}`, {method:'DELETE'}); loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText); }
+        async function deleteTask(id) { if(confirm('Excluir?')) await fetch(`/api/tasks?id=${id}`, {method:'DELETE'}); loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText); }
         function switchView(v) { document.querySelectorAll('.view-container').forEach(e => e.style.display='none'); document.getElementById('view-'+v).style.display='block'; if(v==='calendar') renderCalendar(); }
         function closeModal(id) { document.getElementById(id).style.display='none'; }
+        function openTaskModal(s, t) { document.getElementById('taskModal').style.display='flex'; document.getElementById('statusInput').value=s; if(t) { document.getElementById('taskInput').value=t.title; document.getElementById('dateInput').value=t.due_date; document.getElementById('editingTaskId').value=t.id; } else { document.getElementById('taskInput').value=''; document.getElementById('editingTaskId').value=''; } }
+        function allowDrop(e) { e.preventDefault(); }
+        async function drop(e, s) { e.preventDefault(); const id = e.dataTransfer.getData("text/plain"); if(id) { await fetch('/api/tasks', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, status:s})}); loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText); } }
+        async function createNewProject() { const n = prompt("Nome:"); if(n) { await fetch('/api/projects', {method:'POST', body:JSON.stringify({name:n})}); location.reload(); } }
+        function renderProjectList() { const l = document.getElementById('projectList'); l.innerHTML=''; projects.forEach(p => { const li=document.createElement('li'); li.className=`project-item ${p.id==currentProjectId?'active':''}`; li.innerText=p.name; li.onclick=()=>loadProject(p.id, p.name); l.appendChild(li); }); }
         function changeMonth(d) { currentDate.setMonth(currentDate.getMonth()+d); renderCalendar(); }
-        function renderProjectList() { /* Igual ao anterior, simplificado aqui */ 
-            const l = document.getElementById('projectList'); l.innerHTML = '';
-            projects.forEach(p => {
-                const li = document.createElement('li'); li.className = `project-item ${p.id==currentProjectId?'active':''}`;
-                li.innerHTML = `<span>${p.name}</span>`; li.onclick = () => loadProject(p.id, p.name);
-                l.appendChild(li);
-            });
-        }
-        async function createNewProject() {
-            const n = prompt("Nome:"); if(n) { await fetch('/api/projects', {method:'POST', body:JSON.stringify({name:n})}); location.reload(); }
-        }
         function formatDate(s) { if(!s) return ''; const [y,m,d] = s.split('-'); return `${d}/${m}`; }
-
     </script>
 </body>
 </html>
