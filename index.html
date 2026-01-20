@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kynto Manager (Safe Mode)</title>
+    <title>Kynto Manager (Tasks Attachments)</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -16,138 +16,117 @@
             --status-todo: #f59e0b;
             --status-progress: #3b82f6;
             --status-done: #10b981;
-            --sidebar-width: 260px;
         }
         * { box-sizing: border-box; outline: none; }
         body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a); color: var(--text-main); margin: 0; height: 100vh; display: flex; overflow: hidden; }
 
-        /* Sidebar */
-        .sidebar { width: var(--sidebar-width); background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); border-right: 1px solid var(--glass-border); padding: 20px; display: flex; flex-direction: column; }
-        .brand { font-size: 1.4rem; font-weight: 600; margin-bottom: 30px; color: var(--accent); }
-        .project-list { list-style: none; padding: 0; flex-grow: 1; overflow-y: auto; }
-        .project-item { padding: 12px 15px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; color: #cbd5e1; display: flex; justify-content: space-between; align-items: center; }
-        .project-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        /* Layout */
+        .sidebar { width: 260px; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); border-right: 1px solid var(--glass-border); padding: 20px; display: flex; flex-direction: column; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+        .project-list { list-style: none; padding: 0; flex-grow: 1; }
+        .project-item { padding: 10px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; color: #cbd5e1; display: flex; justify-content: space-between; }
         .project-item.active { background: rgba(56, 189, 248, 0.15); color: var(--accent); border-left: 3px solid var(--accent); }
-        .btn-new-project { background: transparent; border: 1px dashed #475569; color: #94a3b8; width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; }
-        .btn-new-project:hover { border-color: var(--accent); color: var(--accent); }
-
-        /* Main */
-        .main-content { flex: 1; display: flex; flex-direction: column; padding: 0; }
-        .top-header { padding: 20px 30px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.5); }
-        .nav-tabs { display: flex; gap: 10px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 10px; }
-        .nav-btn { background: transparent; border: none; color: #94a3b8; padding: 8px 16px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .nav-btn.active { background: var(--glass-bg); color: #fff; }
-        .view-container { flex: 1; padding: 30px; overflow-y: auto; display: none; }
-        .view-container.active { display: block; }
-
+        
         /* Kanban */
-        .kanban-board { display: flex; gap: 24px; height: 100%; overflow-x: auto; align-items: flex-start; }
-        .column { flex: 1; min-width: 320px; background: var(--glass-bg); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; border: 1px solid var(--glass-border); height: 100%; }
-        .task-list { flex: 1; overflow-y: auto; min-height: 200px; padding-bottom: 50px; }
-        .card { background: #fff; color: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: grab; border-left: 4px solid transparent; }
+        .kanban-board { display: flex; gap: 20px; padding: 20px; height: 100%; overflow-x: auto; }
+        .column { flex: 1; min-width: 300px; background: var(--glass-bg); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; }
+        .task-list { flex: 1; overflow-y: auto; min-height: 100px; }
+        
+        .card { background: #fff; color: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: grab; border-left: 4px solid transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card:hover { transform: translateY(-2px); }
         .card[data-status="todo"] { border-left-color: var(--status-todo); }
         .card[data-status="progress"] { border-left-color: var(--status-progress); }
         .card[data-status="done"] { border-left-color: var(--status-done); }
-        .card-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75rem; color: #64748b; }
-        .btn-card-action { border: none; background: none; color: #ef4444; cursor: pointer; padding: 5px; }
+        
+        .card-icons { margin-top: 8px; display: flex; gap: 10px; font-size: 0.75rem; color: #64748b; }
+        .icon-with-text { display: flex; align-items: center; gap: 4px; }
 
-        /* Calendar */
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-        .calendar-day-header { text-align: center; color: #94a3b8; font-size: 0.9rem; font-weight: 500; padding-bottom: 10px; }
-        .calendar-day { background: rgba(255,255,255,0.05); min-height: 120px; border-radius: 8px; padding: 8px; border: 1px solid transparent; }
-        .calendar-day.today { border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.1); }
-        .cal-event { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-
-        /* Files Repo */
-        .repo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .file-card { background: var(--glass-bg); padding: 20px; border-radius: 12px; display:block; text-align:center; color:white; text-decoration:none; border: 1px solid var(--glass-border); position: relative; }
-        .file-card:hover { background: rgba(255,255,255,0.15); }
-        .delete-file { position: absolute; top: 10px; right: 10px; color: #ef4444; cursor: pointer; }
-
-        /* Modal */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal { background: #1e293b; width: 400px; padding: 30px; border-radius: 16px; border: 1px solid var(--glass-border); }
-        .form-input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; margin-bottom: 15px; }
+        /* Modal Tarefa */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: #1e293b; width: 500px; max-height: 90vh; overflow-y: auto; padding: 30px; border-radius: 16px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px; }
+        
+        .form-input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; }
         .btn-primary { background: var(--accent); color: #0f172a; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-cancel { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-        .btn-google { background: #fff; color: #333; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:12px; border-radius:8px; border:none; cursor:pointer; font-weight:500; margin-bottom:20px; opacity: 1; transition: 0.3s; }
-        .btn-google.disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-google { background: #fff; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; border-radius: 8px; cursor: pointer; border: none; font-weight: 500; }
+        
+        /* Lista de Anexos dentro do Modal */
+        .attachment-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .attachment-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+        .attachment-item a { color: var(--accent); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .attachment-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+        .btn-delete-file { color: #ef4444; cursor: pointer; padding: 5px; }
+
+        /* Utilitários */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="brand">Kynto Cloud</div>
+        <h2 style="color:var(--accent); margin-bottom:20px">Kynto Cloud</h2>
         <ul class="project-list" id="projectList"></ul>
-        <button class="btn-new-project" onclick="createNewProject()">+ Novo Projeto</button>
+        <button class="btn-primary" style="background:transparent; border:1px dashed #555; color:#aaa; width:100%" onclick="createNewProject()">+ Novo Projeto</button>
     </div>
 
     <div class="main-content">
-        <div class="top-header">
-            <h2 id="currentProjectTitle">Carregando...</h2>
-            <div class="nav-tabs">
-                <button class="nav-btn active" onclick="switchView('kanban', this)">Kanban</button>
-                <button class="nav-btn" onclick="switchView('calendar', this)">Calendário</button>
-                <button class="nav-btn" onclick="switchView('repository', this)">Arquivos</button>
-            </div>
+        <div style="padding:20px; border-bottom:1px solid rgba(255,255,255,0.1)">
+            <h2 id="currentProjectTitle" style="margin:0">Carregando...</h2>
         </div>
 
-        <div id="view-kanban" class="view-container active">
-            <div class="kanban-board">
-                <div class="column" id="col-todo"><div style="margin-bottom:10px; font-weight:bold">A Fazer <span id="c-todo"></span></div><div class="task-list" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)"></div><button class="btn-new-project" onclick="openTaskModal('todo')">+ Add</button></div>
-                <div class="column" id="col-progress"><div style="margin-bottom:10px; font-weight:bold">Em Curso <span id="c-progress"></span></div><div class="task-list" ondrop="drop(event, 'progress')" ondragover="allowDrop(event)"></div><button class="btn-new-project" onclick="openTaskModal('progress')">+ Add</button></div>
-                <div class="column" id="col-done"><div style="margin-bottom:10px; font-weight:bold">Concluído <span id="c-done"></span></div><div class="task-list" ondrop="drop(event, 'done')" ondragover="allowDrop(event)"></div><button class="btn-new-project" onclick="openTaskModal('done')">+ Add</button></div>
+        <div class="kanban-board">
+            <div class="column" id="col-todo">
+                <h3>A Fazer</h3>
+                <div class="task-list" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)"></div>
+                <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('todo')">+ Adicionar</button>
             </div>
-        </div>
-
-        <div id="view-calendar" class="view-container">
-            <div class="calendar-header">
-                <h3 id="calMonthDisplay"></h3>
-                <div>
-                    <button class="btn-cancel" onclick="changeMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="btn-cancel" onclick="changeMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
+            <div class="column" id="col-progress">
+                <h3>Em Curso</h3>
+                <div class="task-list" ondrop="drop(event, 'progress')" ondragover="allowDrop(event)"></div>
+                <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('progress')">+ Adicionar</button>
             </div>
-            <div class="calendar-grid" id="calendarGrid"></div>
-        </div>
-
-        <div id="view-repository" class="view-container">
-            <button id="googleBtn" class="btn-google disabled" onclick="loadGooglePicker()">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" width="20">
-                Selecionar do Google Drive
-            </button>
-            <button class="btn-primary" style="margin-bottom:20px" onclick="document.getElementById('fileModal').style.display='flex'">
-                <i class="fa-solid fa-link"></i> Link Manual
-            </button>
-            <div class="repo-grid" id="fileGrid"></div>
+            <div class="column" id="col-done">
+                <h3>Concluído</h3>
+                <div class="task-list" ondrop="drop(event, 'done')" ondragover="allowDrop(event)"></div>
+                <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('done')">+ Adicionar</button>
+            </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="taskModal">
         <div class="modal">
-            <h3 id="modalTitle">Tarefa</h3>
-            <input type="text" id="taskInput" class="form-input" placeholder="Título...">
-            <input type="date" id="dateInput" class="form-input">
-            <input type="hidden" id="statusInput"><input type="hidden" id="editingTaskId">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal('taskModal')">Cancelar</button>
-                <button class="btn-primary" onclick="confirmSaveTask()">Salvar</button>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <h3 id="modalTitle" style="margin:0">Tarefa</h3>
+                <span style="cursor:pointer; font-size:1.2rem" onclick="closeModal()">✕</span>
             </div>
-        </div>
-    </div>
 
-    <div class="modal-overlay" id="fileModal">
-        <div class="modal">
-            <h3>Link Manual</h3>
-            <input type="text" id="fileName" class="form-input" placeholder="Nome do Arquivo">
-            <input type="text" id="fileUrl" class="form-input" placeholder="URL (Link)">
-            <select id="fileType" class="form-input">
-                <option value="doc">Documento</option><option value="sheet">Planilha</option><option value="pdf">PDF</option>
-            </select>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal('fileModal')">Cancelar</button>
-                <button class="btn-primary" onclick="confirmAddFileManual()">Salvar</button>
+            <label style="color:#aaa; font-size:0.8rem">Título</label>
+            <input type="text" id="taskInput" class="form-input">
+
+            <label style="color:#aaa; font-size:0.8rem">Data de Entrega</label>
+            <input type="date" id="dateInput" class="form-input">
+
+            <div id="attachmentsSection" class="hidden">
+                <div style="height:1px; background:#334155; margin:15px 0"></div>
+                <label style="color:#aaa; font-size:0.8rem; display:block; margin-bottom:10px">Anexos (Google Drive)</label>
+                
+                <button id="googleBtn" class="btn-google" onclick="loadGooglePicker()">
+                    <i class="fa-brands fa-google-drive"></i> Anexar Arquivo
+                </button>
+
+                <div class="attachment-list" id="attachmentList">
+                    </div>
+            </div>
+            
+            <div id="saveFirstMsg" style="color:var(--status-todo); font-size:0.8rem; margin-top:10px; text-align:center">
+                Salver a tarefa primeiro para adicionar anexos.
+            </div>
+
+            <input type="hidden" id="statusInput">
+            <input type="hidden" id="editingTaskId">
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px">
+                <button class="btn-primary" style="background:#ef4444" onclick="deleteCurrentTask()" id="btnDeleteTask">Excluir</button>
+                <button class="btn-primary" onclick="confirmSaveTask()">Salvar</button>
             </div>
         </div>
     </div>
@@ -156,169 +135,170 @@
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
     <script>
-        // ==========================================================
-        // CONFIGURAÇÃO DO GOOGLE (Preencha quando tiver as chaves)
-        // Enquanto estiverem com "..." o sistema funcionará, mas sem o botão do Drive.
-        // ==========================================================
+        // --- SUAS CHAVES AQUI ---
         const API_KEY = 'SUA_API_KEY_AQUI'; 
         const CLIENT_ID = 'SEU_CLIENT_ID_AQUI'; 
-        const APP_ID = ''; 
+        const APP_ID = '';
 
-        // ESTADO GLOBAL
+        // --- ESTADO ---
         let projects = [], currentTasks = [], currentFiles = [];
         let currentProjectId = null;
-        let currentDate = new Date();
         let accessToken = null;
 
-        // INICIALIZAÇÃO SEGURA
         document.addEventListener('DOMContentLoaded', async () => {
-            // 1. Carrega o App (Prioridade Máxima)
-            try {
-                await initApp(); 
-            } catch (e) {
-                console.error("Erro fatal ao iniciar app:", e);
-                alert("Erro ao conectar com o servidor.");
-            }
-
-            // 2. Tenta Iniciar o Google (Sem travar o resto)
+            await initApp();
             setTimeout(initGoogle, 1000);
         });
 
         async function initApp() {
-            const res = await fetch('/api/projects');
-            if(!res.ok) throw new Error("Falha na API");
-            projects = await res.json();
-            renderProjectList();
-            
-            if(projects.length > 0) {
-                loadProject(projects[0].id, projects[0].name);
-            } else {
-                document.getElementById('currentProjectTitle').innerText = "Crie um projeto";
-            }
+            try {
+                const res = await fetch('/api/projects');
+                if(!res.ok) throw new Error();
+                projects = await res.json();
+                renderProjectList();
+                if(projects.length) loadProject(projects[0].id, projects[0].name);
+                else document.getElementById('currentProjectTitle').innerText = "Crie um projeto...";
+            } catch(e) { console.log("Erro carregando app"); }
         }
 
         function initGoogle() {
-            // Verifica se as chaves foram preenchidas
-            if(API_KEY === 'SUA_API_KEY_AQUI' || CLIENT_ID === 'SEU_CLIENT_ID_AQUI') {
-                console.warn("Chaves do Google não configuradas. Botão desativado.");
-                return;
-            }
-
+            if(API_KEY.includes('SUA_')) return;
             try {
-                gapi.load('client:picker', () => { console.log('Google API Loaded'); });
+                gapi.load('client:picker', () => {});
                 google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID,
-                    scope: 'https://www.googleapis.com/auth/drive.readonly',
-                    callback: (resp) => {
-                        if (resp.error) return console.error(resp);
-                        accessToken = resp.access_token;
-                        createPicker();
-                    },
+                    client_id: CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
+                    callback: (r) => { accessToken = r.access_token; createPicker(); }
                 });
-                // Habilita o botão
-                const btn = document.getElementById('googleBtn');
-                btn.classList.remove('disabled');
-            } catch (e) {
-                console.error("Erro ao iniciar Google:", e);
-            }
+            } catch(e){}
         }
 
-        // --- LÓGICA DO APP (KANBAN, CALENDAR) ---
+        // --- CORE ---
         async function loadProject(id, name) {
             currentProjectId = id;
             document.getElementById('currentProjectTitle').innerText = name;
             renderProjectList();
             
-            const [resT, resF] = await Promise.all([
+            const [t, f] = await Promise.all([
                 fetch(`/api/tasks?projectId=${id}`), fetch(`/api/files?projectId=${id}`)
             ]);
-            currentTasks = await resT.json();
-            currentFiles = await resF.json();
-            
-            renderKanban(); renderCalendar(); renderFiles();
+            currentTasks = await t.json();
+            currentFiles = await f.json();
+            renderKanban();
         }
 
-        // Kanban Render
         function renderKanban() {
             ['todo', 'progress', 'done'].forEach(s => {
                 const list = document.querySelector(`#col-${s} .task-list`);
                 list.innerHTML = '';
                 const tasks = currentTasks.filter(t => t.status === s);
-                document.getElementById(`c-${s}`).innerText = tasks.length;
+                
                 tasks.forEach(t => {
+                    // Verifica quantos arquivos essa tarefa tem
+                    const taskFiles = currentFiles.filter(f => f.task_id == t.id);
+                    const hasFiles = taskFiles.length > 0;
+
                     const card = document.createElement('div');
-                    card.className = 'card'; card.setAttribute('data-status', s); card.draggable = true;
-                    card.innerHTML = `<div>${t.title}</div><div class="card-meta"><span>${formatDate(t.due_date)}</span><button class="btn-card-action" onclick="deleteTask(${t.id})">Del</button></div>`;
+                    card.className = 'card'; card.draggable = true;
+                    card.setAttribute('data-status', s);
                     
-                    card.onclick = (e) => { if(!e.target.closest('.btn-card-action')) openTaskModal(s, t); };
+                    card.innerHTML = `
+                        <div style="font-weight:500">${t.title}</div>
+                        <div class="card-icons">
+                            ${t.due_date ? `<div class="icon-with-text"><i class="fa-regular fa-clock"></i> ${formatDate(t.due_date)}</div>` : ''}
+                            ${hasFiles ? `<div class="icon-with-text"><i class="fa-solid fa-paperclip"></i> ${taskFiles.length}</div>` : ''}
+                        </div>
+                    `;
+                    
+                    card.onclick = () => openTaskModal(s, t);
                     card.ondragstart = (ev) => ev.dataTransfer.setData("text/plain", t.id.toString());
                     list.appendChild(card);
                 });
             });
         }
 
-        // Calendar Render
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
-            const year = currentDate.getFullYear(); const month = currentDate.getMonth();
-            const names = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-            document.getElementById('calMonthDisplay').innerText = `${names[month]} ${year}`;
+        // --- MODAL & ANEXOS ---
+        function openTaskModal(status, task = null) {
+            document.getElementById('taskModal').style.display = 'flex';
+            document.getElementById('statusInput').value = status;
             
-            ['D','S','T','Q','Q','S','S'].forEach(d => grid.innerHTML += `<div class="calendar-day-header">${d}</div>`);
-            
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month+1, 0).getDate();
-            
-            for(let i=0; i<firstDay; i++) grid.innerHTML += '<div></div>';
-            
-            for(let d=1; d<=daysInMonth; d++) {
-                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const todayStr = new Date().toISOString().split('T')[0];
-                const dayTasks = currentTasks.filter(t => t.due_date === dateStr);
+            const attachSection = document.getElementById('attachmentsSection');
+            const saveFirstMsg = document.getElementById('saveFirstMsg');
+            const deleteBtn = document.getElementById('btnDeleteTask');
+
+            if(task) {
+                // EDITAR (Pode anexar)
+                document.getElementById('modalTitle').innerText = "Editar Tarefa";
+                document.getElementById('taskInput').value = task.title;
+                document.getElementById('dateInput').value = task.due_date;
+                document.getElementById('editingTaskId').value = task.id;
                 
-                let html = `<div class="calendar-day ${dateStr===todayStr?'today':''}">
-                    <div style="font-size:0.8rem; margin-bottom:5px; font-weight:bold">${d}</div>`;
-                dayTasks.forEach(t => {
-                     let color = t.status === 'done' ? '#10b981' : (t.status === 'progress' ? '#3b82f6' : '#f59e0b');
-                     html += `<div class="cal-event" style="background:${color}" onclick="openTaskModal('${t.status}', {id:${t.id}, title:'${t.title}', due_date:'${t.due_date}', status:'${t.status}'})">${t.title}</div>`;
-                });
-                grid.innerHTML += html + '</div>';
+                attachSection.classList.remove('hidden');
+                saveFirstMsg.classList.add('hidden');
+                deleteBtn.classList.remove('hidden');
+
+                renderAttachmentList(task.id);
+            } else {
+                // NOVA (Não pode anexar ainda)
+                document.getElementById('modalTitle').innerText = "Nova Tarefa";
+                document.getElementById('taskInput').value = "";
+                document.getElementById('dateInput').value = "";
+                document.getElementById('editingTaskId').value = "";
+                
+                attachSection.classList.add('hidden');
+                saveFirstMsg.classList.remove('hidden');
+                deleteBtn.classList.add('hidden');
             }
         }
 
-        // Files Render
-        function renderFiles() {
-            const grid = document.getElementById('fileGrid'); grid.innerHTML = '';
-            currentFiles.forEach(f => {
-                const a = document.createElement('a'); a.className = 'file-card'; a.href = f.url; a.target = '_blank';
-                a.innerHTML = `<i class="fa-solid fa-file"></i> <div>${f.name}</div><div class="delete-file" onclick="deleteFile(${f.id}, event)">x</div>`;
-                grid.appendChild(a);
+        function renderAttachmentList(taskId) {
+            const list = document.getElementById('attachmentList');
+            list.innerHTML = '';
+            
+            const files = currentFiles.filter(f => f.task_id == taskId);
+            
+            files.forEach(f => {
+                const item = document.createElement('div');
+                item.className = 'attachment-item';
+                // Ícone ou Thumbnail
+                let icon = '<i class="fa-solid fa-file"></i>';
+                if(f.type === 'image') icon = `<i class="fa-solid fa-image"></i>`;
+                
+                item.innerHTML = `
+                    ${icon}
+                    <a href="${f.url}" target="_blank">${f.name}</a>
+                    <i class="fa-solid fa-trash btn-delete-file" onclick="deleteFile(${f.id})"></i>
+                `;
+                list.appendChild(item);
             });
         }
 
-        // --- FUNÇÕES DE AÇÃO ---
         async function confirmSaveTask() {
             const id = document.getElementById('editingTaskId').value;
             const title = document.getElementById('taskInput').value;
             const date = document.getElementById('dateInput').value;
             const status = document.getElementById('statusInput').value;
             
-            if(!title) return alert("Título obrigatório");
-            
+            if(!title) return alert("Digite um título");
+
             const body = { id, title, date, status, projectId: currentProjectId };
             const method = id ? 'PUT' : 'POST';
             
-            await fetch('/api/tasks', { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-            closeModal('taskModal');
+            await fetch('/api/tasks', { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            closeModal();
             loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
         }
 
-        // --- GOOGLE ACTIONS ---
-        function loadGooglePicker() {
-            if(document.getElementById('googleBtn').classList.contains('disabled')) {
-                alert("Configure as Chaves de API no código para usar o Google Drive.");
-                return;
+        async function deleteCurrentTask() {
+            const id = document.getElementById('editingTaskId').value;
+            if(id && confirm("Excluir tarefa e anexos?")) {
+                await fetch(`/api/tasks?id=${id}`, { method: 'DELETE' });
+                closeModal();
+                loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
             }
+        }
+
+        // --- GOOGLE PICKER ---
+        function loadGooglePicker() {
             const client = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
                 callback: (r) => { accessToken = r.access_token; createPicker(); }
@@ -331,39 +311,52 @@
             const picker = new google.picker.PickerBuilder()
                 .enableFeature(google.picker.Feature.NAV_HIDDEN).setDeveloperKey(API_KEY).setAppId(APP_ID)
                 .setOAuthToken(accessToken).addView(view)
-                .setCallback(async (data) => {
-                    if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
-                        const doc = data[google.picker.Response.DOCUMENTS][0];
-                        saveFile(doc.name, doc.url, 'google');
-                    }
-                }).build();
+                .setCallback(pickerCallback).build();
             picker.setVisible(true);
         }
 
-        async function confirmAddFileManual() {
-            const name = document.getElementById('fileName').value;
-            const url = document.getElementById('fileUrl').value;
-            if(name && url) await saveFile(name, url, 'manual');
+        async function pickerCallback(data) {
+            if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+                const doc = data[google.picker.Response.DOCUMENTS][0];
+                const taskId = document.getElementById('editingTaskId').value;
+                
+                // Salvar arquivo vinculado à tarefa
+                await fetch('/api/files', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ 
+                        projectId: currentProjectId, 
+                        task_id: taskId, // IMPORTANTE: Vincula à tarefa
+                        name: doc.name, 
+                        url: doc.url, 
+                        type: doc.type === 'photo' ? 'image' : 'file' 
+                    })
+                });
+                
+                // Recarrega lista de arquivos localmente
+                const fRes = await fetch(`/api/files?projectId=${currentProjectId}`);
+                currentFiles = await fRes.json();
+                renderAttachmentList(taskId);
+            }
         }
 
-        async function saveFile(name, url, type) {
-            await fetch('/api/files', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ projectId: currentProjectId, name, url, type }) });
-            closeModal('fileModal');
-            loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
+        // --- UTILS ---
+        async function deleteFile(id) {
+            if(confirm("Remover anexo?")) {
+                await fetch(`/api/files?id=${id}`, {method:'DELETE'});
+                const fRes = await fetch(`/api/files?projectId=${currentProjectId}`);
+                currentFiles = await fRes.json();
+                renderAttachmentList(document.getElementById('editingTaskId').value);
+            }
         }
+        
+        function allowDrop(e){e.preventDefault();}
+        async function drop(e,s){e.preventDefault();const id=e.dataTransfer.getData("text/plain");if(id){await fetch('/api/tasks',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status:s})});loadProject(currentProjectId,document.getElementById('currentProjectTitle').innerText);}}
+        function renderProjectList(){const l=document.getElementById('projectList');l.innerHTML='';projects.forEach(p=>{const li=document.createElement('li');li.className=`project-item ${p.id==currentProjectId?'active':''}`;li.innerHTML=`<span>${p.name}</span>`;li.onclick=()=>loadProject(p.id,p.name);l.appendChild(li);});}
+        async function createNewProject(){const n=prompt("Nome:");if(n){await fetch('/api/projects',{method:'POST',body:JSON.stringify({name:n})});location.reload();}}
+        function closeModal(){document.getElementById('taskModal').style.display='none';}
+        function formatDate(s){if(!s)return'';const[y,m,d]=s.split('-');return`${d}/${m}`;}
 
-        // --- UTILITÁRIOS ---
-        async function deleteFile(id, e) { e.preventDefault(); e.stopPropagation(); if(confirm('Excluir?')) await fetch(`/api/files?id=${id}`, {method:'DELETE'}); loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText); }
-        async function deleteTask(id) { if(confirm('Excluir?')) await fetch(`/api/tasks?id=${id}`, {method:'DELETE'}); loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText); }
-        function switchView(v) { document.querySelectorAll('.view-container').forEach(e => e.style.display='none'); document.getElementById('view-'+v).style.display='block'; if(v==='calendar') renderCalendar(); }
-        function closeModal(id) { document.getElementById(id).style.display='none'; }
-        function openTaskModal(s, t) { document.getElementById('taskModal').style.display='flex'; document.getElementById('statusInput').value=s; if(t) { document.getElementById('taskInput').value=t.title; document.getElementById('dateInput').value=t.due_date; document.getElementById('editingTaskId').value=t.id; } else { document.getElementById('taskInput').value=''; document.getElementById('editingTaskId').value=''; } }
-        function allowDrop(e) { e.preventDefault(); }
-        async function drop(e, s) { e.preventDefault(); const id = e.dataTransfer.getData("text/plain"); if(id) { await fetch('/api/tasks', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, status:s})}); loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText); } }
-        async function createNewProject() { const n = prompt("Nome:"); if(n) { await fetch('/api/projects', {method:'POST', body:JSON.stringify({name:n})}); location.reload(); } }
-        function renderProjectList() { const l = document.getElementById('projectList'); l.innerHTML=''; projects.forEach(p => { const li=document.createElement('li'); li.className=`project-item ${p.id==currentProjectId?'active':''}`; li.innerText=p.name; li.onclick=()=>loadProject(p.id, p.name); l.appendChild(li); }); }
-        function changeMonth(d) { currentDate.setMonth(currentDate.getMonth()+d); renderCalendar(); }
-        function formatDate(s) { if(!s) return ''; const [y,m,d] = s.split('-'); return `${d}/${m}`; }
     </script>
 </body>
 </html>
