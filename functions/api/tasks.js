@@ -1,4 +1,4 @@
-// GET: Buscar tarefas (pode filtrar por ?projectId=1)
+// GET: Buscar tarefas
 export async function onRequestGet(context) {
     const { env, request } = context;
     const url = new URL(request.url);
@@ -19,7 +19,7 @@ export async function onRequestGet(context) {
 // POST: Criar Tarefa
 export async function onRequestPost(context) {
     const { request, env } = context;
-    const body = await request.json(); // { projectId, title, date, status }
+    const body = await request.json(); 
 
     await env.DB.prepare(
         "INSERT INTO tasks (project_id, title, status, due_date) VALUES (?, ?, ?, ?)"
@@ -28,19 +28,26 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ success: true }), { status: 201 });
 }
 
-// PUT: Atualizar Tarefa (Mover de coluna)
+// PUT: Atualizar Tarefa (Status OU Edição Completa)
 export async function onRequestPut(context) {
     const { request, env } = context;
-    const body = await request.json(); // { id, status }
+    const body = await request.json(); // { id, status, title, date }
 
-    await env.DB.prepare(
-        "UPDATE tasks SET status = ? WHERE id = ?"
-    ).bind(body.status, body.id).run();
+    // Cenário 1: Apenas arrastou (Mudar Status)
+    if (body.status && !body.title) {
+        await env.DB.prepare("UPDATE tasks SET status = ? WHERE id = ?")
+            .bind(body.status, body.id).run();
+    } 
+    // Cenário 2: Edição completa (Clicou para editar)
+    else if (body.title && body.date) {
+        await env.DB.prepare("UPDATE tasks SET title = ?, due_date = ? WHERE id = ?")
+            .bind(body.title, body.date, body.id).run();
+    }
 
     return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 }
 
-// DELETE: Apagar Tarefa (usando query string ?id=1)
+// DELETE: Apagar Tarefa
 export async function onRequestDelete(context) {
     const { request, env } = context;
     const url = new URL(request.url);
