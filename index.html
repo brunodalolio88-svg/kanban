@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kynto Manager (Tasks Attachments)</title>
+    <title>Kynto Manager (Final)</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -20,75 +20,111 @@
         * { box-sizing: border-box; outline: none; }
         body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a); color: var(--text-main); margin: 0; height: 100vh; display: flex; overflow: hidden; }
 
-        /* Layout */
+        /* Sidebar & Layout */
         .sidebar { width: 260px; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); border-right: 1px solid var(--glass-border); padding: 20px; display: flex; flex-direction: column; }
         .main-content { flex: 1; display: flex; flex-direction: column; }
-        .project-list { list-style: none; padding: 0; flex-grow: 1; }
-        .project-item { padding: 10px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; color: #cbd5e1; display: flex; justify-content: space-between; }
-        .project-item.active { background: rgba(56, 189, 248, 0.15); color: var(--accent); border-left: 3px solid var(--accent); }
+        .top-header { padding: 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
         
+        .nav-tabs { display: flex; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 8px; }
+        .nav-btn { background: transparent; border: none; color: #94a3b8; padding: 8px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .nav-btn.active { background: rgba(255,255,255,0.1); color: #fff; }
+
+        .view-container { flex: 1; padding: 20px; overflow-y: auto; display: none; }
+        .view-container.active { display: block; }
+
+        /* Project List */
+        .project-list { list-style: none; padding: 0; flex-grow: 1; overflow-y: auto; }
+        .project-item { padding: 10px; margin-bottom: 5px; border-radius: 8px; cursor: pointer; color: #cbd5e1; display: flex; justify-content: space-between; font-size: 0.95rem; }
+        .project-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .project-item.active { background: rgba(56, 189, 248, 0.15); color: var(--accent); border-left: 3px solid var(--accent); }
+
         /* Kanban */
-        .kanban-board { display: flex; gap: 20px; padding: 20px; height: 100%; overflow-x: auto; }
-        .column { flex: 1; min-width: 300px; background: var(--glass-bg); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; }
-        .task-list { flex: 1; overflow-y: auto; min-height: 100px; }
+        .kanban-board { display: flex; gap: 20px; height: 100%; overflow-x: auto; align-items: flex-start; }
+        .column { flex: 1; min-width: 320px; background: var(--glass-bg); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; max-height: 100%; }
+        .task-list { flex: 1; overflow-y: auto; min-height: 100px; padding-right: 5px; }
         
         .card { background: #fff; color: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: grab; border-left: 4px solid transparent; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .card:hover { transform: translateY(-2px); }
         .card[data-status="todo"] { border-left-color: var(--status-todo); }
         .card[data-status="progress"] { border-left-color: var(--status-progress); }
         .card[data-status="done"] { border-left-color: var(--status-done); }
-        
         .card-icons { margin-top: 8px; display: flex; gap: 10px; font-size: 0.75rem; color: #64748b; }
         .icon-with-text { display: flex; align-items: center; gap: 4px; }
 
-        /* Modal Tarefa */
+        /* Calendar */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .calendar-day-header { text-align: center; color: #94a3b8; font-size: 0.9rem; font-weight: 500; padding-bottom: 10px; }
+        .calendar-day { background: rgba(255,255,255,0.05); min-height: 120px; border-radius: 8px; padding: 8px; border: 1px solid transparent; }
+        .calendar-day:hover { border-color: rgba(255,255,255,0.2); }
+        .calendar-day.today { border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.1); }
+        .cal-event { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+
+        /* Modal */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal { background: #1e293b; width: 500px; max-height: 90vh; overflow-y: auto; padding: 30px; border-radius: 16px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 15px; }
         
         .form-input { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; }
         .btn-primary { background: var(--accent); color: #0f172a; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-google { background: #fff; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; border-radius: 8px; cursor: pointer; border: none; font-weight: 500; }
-        
-        /* Lista de Anexos dentro do Modal */
+        .btn-google { background: #fff; color: #333; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 8px; cursor: pointer; border: none; font-weight: 500; width: 100%; transition: 0.2s; }
+        .btn-google:hover { background: #f1f1f1; }
+        .btn-google.disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Attachments List */
         .attachment-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
         .attachment-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
         .attachment-item a { color: var(--accent); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .attachment-item img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
         .btn-delete-file { color: #ef4444; cursor: pointer; padding: 5px; }
 
-        /* Utilitários */
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <h2 style="color:var(--accent); margin-bottom:20px">Kynto Cloud</h2>
+        <h2 style="color:var(--accent); margin-bottom:20px"><i class="fa-solid fa-layer-group"></i> Kynto Cloud</h2>
         <ul class="project-list" id="projectList"></ul>
         <button class="btn-primary" style="background:transparent; border:1px dashed #555; color:#aaa; width:100%" onclick="createNewProject()">+ Novo Projeto</button>
     </div>
 
     <div class="main-content">
-        <div style="padding:20px; border-bottom:1px solid rgba(255,255,255,0.1)">
-            <h2 id="currentProjectTitle" style="margin:0">Carregando...</h2>
+        <div class="top-header">
+            <h2 id="currentProjectTitle" style="margin:0; font-size:1.2rem">Carregando...</h2>
+            <div class="nav-tabs">
+                <button class="nav-btn active" onclick="switchView('kanban', this)"><i class="fa-solid fa-columns"></i> Kanban</button>
+                <button class="nav-btn" onclick="switchView('calendar', this)"><i class="fa-regular fa-calendar"></i> Calendário</button>
+            </div>
         </div>
 
-        <div class="kanban-board">
-            <div class="column" id="col-todo">
-                <h3>A Fazer</h3>
-                <div class="task-list" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)"></div>
-                <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('todo')">+ Adicionar</button>
+        <div id="view-kanban" class="view-container active">
+            <div class="kanban-board">
+                <div class="column" id="col-todo">
+                    <div style="font-weight:600; margin-bottom:15px">A Fazer <span id="c-todo" style="opacity:0.5; font-size:0.8em">0</span></div>
+                    <div class="task-list" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)"></div>
+                    <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('todo')">+ Adicionar</button>
+                </div>
+                <div class="column" id="col-progress">
+                    <div style="font-weight:600; margin-bottom:15px">Em Curso <span id="c-progress" style="opacity:0.5; font-size:0.8em">0</span></div>
+                    <div class="task-list" ondrop="drop(event, 'progress')" ondragover="allowDrop(event)"></div>
+                    <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('progress')">+ Adicionar</button>
+                </div>
+                <div class="column" id="col-done">
+                    <div style="font-weight:600; margin-bottom:15px">Concluído <span id="c-done" style="opacity:0.5; font-size:0.8em">0</span></div>
+                    <div class="task-list" ondrop="drop(event, 'done')" ondragover="allowDrop(event)"></div>
+                    <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('done')">+ Adicionar</button>
+                </div>
             </div>
-            <div class="column" id="col-progress">
-                <h3>Em Curso</h3>
-                <div class="task-list" ondrop="drop(event, 'progress')" ondragover="allowDrop(event)"></div>
-                <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('progress')">+ Adicionar</button>
+        </div>
+
+        <div id="view-calendar" class="view-container">
+            <div class="calendar-header">
+                <h3 id="calMonthDisplay" style="margin:0">Mês</h3>
+                <div>
+                    <button class="btn-primary" style="background:transparent; border:1px solid #555; padding:5px 15px" onclick="changeMonth(-1)"><</button>
+                    <button class="btn-primary" style="background:transparent; border:1px solid #555; padding:5px 15px" onclick="changeMonth(1)">></button>
+                </div>
             </div>
-            <div class="column" id="col-done">
-                <h3>Concluído</h3>
-                <div class="task-list" ondrop="drop(event, 'done')" ondragover="allowDrop(event)"></div>
-                <button class="btn-primary" style="margin-top:10px; width:100%" onclick="openTaskModal('done')">+ Adicionar</button>
-            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
         </div>
     </div>
 
@@ -99,26 +135,29 @@
                 <span style="cursor:pointer; font-size:1.2rem" onclick="closeModal()">✕</span>
             </div>
 
-            <label style="color:#aaa; font-size:0.8rem">Título</label>
-            <input type="text" id="taskInput" class="form-input">
-
-            <label style="color:#aaa; font-size:0.8rem">Data de Entrega</label>
-            <input type="date" id="dateInput" class="form-input">
+            <div>
+                <label style="color:#aaa; font-size:0.8rem">Título</label>
+                <input type="text" id="taskInput" class="form-input">
+            </div>
+            <div>
+                <label style="color:#aaa; font-size:0.8rem">Data</label>
+                <input type="date" id="dateInput" class="form-input">
+            </div>
 
             <div id="attachmentsSection" class="hidden">
                 <div style="height:1px; background:#334155; margin:15px 0"></div>
                 <label style="color:#aaa; font-size:0.8rem; display:block; margin-bottom:10px">Anexos (Google Drive)</label>
                 
-                <button id="googleBtn" class="btn-google" onclick="loadGooglePicker()">
-                    <i class="fa-brands fa-google-drive"></i> Anexar Arquivo
+                <button id="googleBtn" class="btn-google disabled" onclick="loadGooglePicker()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" width="20">
+                    Anexar do Drive
                 </button>
 
-                <div class="attachment-list" id="attachmentList">
-                    </div>
+                <div class="attachment-list" id="attachmentList"></div>
             </div>
             
             <div id="saveFirstMsg" style="color:var(--status-todo); font-size:0.8rem; margin-top:10px; text-align:center">
-                Salver a tarefa primeiro para adicionar anexos.
+                Salve a tarefa para habilitar anexos.
             </div>
 
             <input type="hidden" id="statusInput">
@@ -135,14 +174,14 @@
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
     <script>
-        // --- SUAS CHAVES AQUI ---
+        // --- CONFIGURAÇÃO (COLOQUE SUA API KEY ABAIXO) ---
         const API_KEY = 'SUA_API_KEY_AQUI'; 
-        const CLIENT_ID = 'SEU_CLIENT_ID_AQUI'; 
+        const CLIENT_ID = '926808751928-ea7ui6rbnvtu43bt9jtij03deuqguc9m.apps.googleusercontent.com'; // JÁ CONFIGURADO
         const APP_ID = '';
 
-        // --- ESTADO ---
         let projects = [], currentTasks = [], currentFiles = [];
         let currentProjectId = null;
+        let currentDate = new Date();
         let accessToken = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -153,26 +192,28 @@
         async function initApp() {
             try {
                 const res = await fetch('/api/projects');
-                if(!res.ok) throw new Error();
-                projects = await res.json();
-                renderProjectList();
-                if(projects.length) loadProject(projects[0].id, projects[0].name);
-                else document.getElementById('currentProjectTitle').innerText = "Crie um projeto...";
-            } catch(e) { console.log("Erro carregando app"); }
+                if(res.ok) {
+                    projects = await res.json();
+                    renderProjectList();
+                    if(projects.length) loadProject(projects[0].id, projects[0].name);
+                    else document.getElementById('currentProjectTitle').innerText = "Crie um projeto...";
+                }
+            } catch(e) { console.error("Erro API:", e); }
         }
 
         function initGoogle() {
-            if(API_KEY.includes('SUA_')) return;
+            if(API_KEY === 'SUA_API_KEY_AQUI') return; // Só ativa se tiver chave
             try {
                 gapi.load('client:picker', () => {});
                 google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
+                    client_id: CLIENT_ID,
+                    scope: 'https://www.googleapis.com/auth/drive.readonly',
                     callback: (r) => { accessToken = r.access_token; createPicker(); }
                 });
-            } catch(e){}
+                document.getElementById('googleBtn').classList.remove('disabled');
+            } catch(e) { console.error("Google Init Error:", e); }
         }
 
-        // --- CORE ---
         async function loadProject(id, name) {
             currentProjectId = id;
             document.getElementById('currentProjectTitle').innerText = name;
@@ -183,7 +224,9 @@
             ]);
             currentTasks = await t.json();
             currentFiles = await f.json();
+            
             renderKanban();
+            renderCalendar();
         }
 
         function renderKanban() {
@@ -191,12 +234,10 @@
                 const list = document.querySelector(`#col-${s} .task-list`);
                 list.innerHTML = '';
                 const tasks = currentTasks.filter(t => t.status === s);
-                
-                tasks.forEach(t => {
-                    // Verifica quantos arquivos essa tarefa tem
-                    const taskFiles = currentFiles.filter(f => f.task_id == t.id);
-                    const hasFiles = taskFiles.length > 0;
+                document.getElementById(`c-${s}`).innerText = tasks.length;
 
+                tasks.forEach(t => {
+                    const taskFiles = currentFiles.filter(f => f.task_id == t.id);
                     const card = document.createElement('div');
                     card.className = 'card'; card.draggable = true;
                     card.setAttribute('data-status', s);
@@ -205,10 +246,9 @@
                         <div style="font-weight:500">${t.title}</div>
                         <div class="card-icons">
                             ${t.due_date ? `<div class="icon-with-text"><i class="fa-regular fa-clock"></i> ${formatDate(t.due_date)}</div>` : ''}
-                            ${hasFiles ? `<div class="icon-with-text"><i class="fa-solid fa-paperclip"></i> ${taskFiles.length}</div>` : ''}
+                            ${taskFiles.length ? `<div class="icon-with-text"><i class="fa-solid fa-paperclip"></i> ${taskFiles.length}</div>` : ''}
                         </div>
                     `;
-                    
                     card.onclick = () => openTaskModal(s, t);
                     card.ondragstart = (ev) => ev.dataTransfer.setData("text/plain", t.id.toString());
                     list.appendChild(card);
@@ -216,58 +256,68 @@
             });
         }
 
-        // --- MODAL & ANEXOS ---
-        function openTaskModal(status, task = null) {
-            document.getElementById('taskModal').style.display = 'flex';
-            document.getElementById('statusInput').value = status;
-            
-            const attachSection = document.getElementById('attachmentsSection');
-            const saveFirstMsg = document.getElementById('saveFirstMsg');
-            const deleteBtn = document.getElementById('btnDeleteTask');
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid'); grid.innerHTML = '';
+            const year = currentDate.getFullYear(); const month = currentDate.getMonth();
+            const names = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            document.getElementById('calMonthDisplay').innerText = `${names[month]} ${year}`;
 
-            if(task) {
-                // EDITAR (Pode anexar)
-                document.getElementById('modalTitle').innerText = "Editar Tarefa";
-                document.getElementById('taskInput').value = task.title;
-                document.getElementById('dateInput').value = task.due_date;
-                document.getElementById('editingTaskId').value = task.id;
-                
-                attachSection.classList.remove('hidden');
-                saveFirstMsg.classList.add('hidden');
-                deleteBtn.classList.remove('hidden');
+            ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d => grid.innerHTML += `<div class="calendar-day-header">${d}</div>`);
 
-                renderAttachmentList(task.id);
-            } else {
-                // NOVA (Não pode anexar ainda)
-                document.getElementById('modalTitle').innerText = "Nova Tarefa";
-                document.getElementById('taskInput').value = "";
-                document.getElementById('dateInput').value = "";
-                document.getElementById('editingTaskId').value = "";
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for(let i=0; i<firstDay; i++) grid.innerHTML += '<div></div>';
+
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const todayStr = new Date().toISOString().split('T')[0];
+                const dayTasks = currentTasks.filter(t => t.due_date === dateStr);
                 
-                attachSection.classList.add('hidden');
-                saveFirstMsg.classList.remove('hidden');
-                deleteBtn.classList.add('hidden');
+                let html = `<div class="calendar-day ${dateStr===todayStr?'today':''}">
+                    <div style="font-size:0.8rem; font-weight:bold; margin-bottom:5px">${d}</div>`;
+                
+                dayTasks.forEach(t => {
+                    let color = t.status === 'done' ? '#10b981' : (t.status === 'progress' ? '#3b82f6' : '#f59e0b');
+                    html += `<div class="cal-event" style="background:${color}" onclick="openTaskModal('${t.status}', {id:${t.id}, title:'${t.title}', due_date:'${t.due_date}', status:'${t.status}'})">${t.title}</div>`;
+                });
+                grid.innerHTML += html + '</div>';
             }
         }
 
-        function renderAttachmentList(taskId) {
-            const list = document.getElementById('attachmentList');
-            list.innerHTML = '';
-            
-            const files = currentFiles.filter(f => f.task_id == taskId);
-            
-            files.forEach(f => {
-                const item = document.createElement('div');
-                item.className = 'attachment-item';
-                // Ícone ou Thumbnail
-                let icon = '<i class="fa-solid fa-file"></i>';
-                if(f.type === 'image') icon = `<i class="fa-solid fa-image"></i>`;
-                
-                item.innerHTML = `
-                    ${icon}
-                    <a href="${f.url}" target="_blank">${f.name}</a>
-                    <i class="fa-solid fa-trash btn-delete-file" onclick="deleteFile(${f.id})"></i>
-                `;
+        // --- AÇÕES ---
+        function openTaskModal(status, task = null) {
+            document.getElementById('taskModal').style.display = 'flex';
+            document.getElementById('statusInput').value = status;
+            const attachSection = document.getElementById('attachmentsSection');
+            const saveFirst = document.getElementById('saveFirstMsg');
+            const delBtn = document.getElementById('btnDeleteTask');
+
+            if(task) {
+                document.getElementById('modalTitle').innerText = "Editar";
+                document.getElementById('taskInput').value = task.title;
+                document.getElementById('dateInput').value = task.due_date;
+                document.getElementById('editingTaskId').value = task.id;
+                attachSection.classList.remove('hidden');
+                saveFirst.classList.add('hidden');
+                delBtn.classList.remove('hidden');
+                renderAttachments(task.id);
+            } else {
+                document.getElementById('modalTitle').innerText = "Nova";
+                document.getElementById('taskInput').value = "";
+                document.getElementById('dateInput').value = "";
+                document.getElementById('editingTaskId').value = "";
+                attachSection.classList.add('hidden');
+                saveFirst.classList.remove('hidden');
+                delBtn.classList.add('hidden');
+            }
+        }
+
+        function renderAttachments(taskId) {
+            const list = document.getElementById('attachmentList'); list.innerHTML = '';
+            currentFiles.filter(f => f.task_id == taskId).forEach(f => {
+                const item = document.createElement('div'); item.className = 'attachment-item';
+                item.innerHTML = `<i class="fa-solid fa-file"></i><a href="${f.url}" target="_blank">${f.name}</a><i class="fa-solid fa-trash btn-delete-file" onclick="deleteFile(${f.id})"></i>`;
                 list.appendChild(item);
             });
         }
@@ -278,27 +328,19 @@
             const date = document.getElementById('dateInput').value;
             const status = document.getElementById('statusInput').value;
             
-            if(!title) return alert("Digite um título");
+            if(!title) return alert("Título necessário");
 
             const body = { id, title, date, status, projectId: currentProjectId };
             const method = id ? 'PUT' : 'POST';
             
-            await fetch('/api/tasks', { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            await fetch('/api/tasks', { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
             closeModal();
             loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
         }
 
-        async function deleteCurrentTask() {
-            const id = document.getElementById('editingTaskId').value;
-            if(id && confirm("Excluir tarefa e anexos?")) {
-                await fetch(`/api/tasks?id=${id}`, { method: 'DELETE' });
-                closeModal();
-                loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText);
-            }
-        }
-
         // --- GOOGLE PICKER ---
         function loadGooglePicker() {
+            if(document.getElementById('googleBtn').classList.contains('disabled')) return alert("Configure a API_KEY no código primeiro!");
             const client = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID, scope: 'https://www.googleapis.com/auth/drive.readonly',
                 callback: (r) => { accessToken = r.access_token; createPicker(); }
@@ -310,8 +352,7 @@
             const view = new google.picker.View(google.picker.ViewId.DOCS);
             const picker = new google.picker.PickerBuilder()
                 .enableFeature(google.picker.Feature.NAV_HIDDEN).setDeveloperKey(API_KEY).setAppId(APP_ID)
-                .setOAuthToken(accessToken).addView(view)
-                .setCallback(pickerCallback).build();
+                .setOAuthToken(accessToken).addView(view).setCallback(pickerCallback).build();
             picker.setVisible(true);
         }
 
@@ -319,44 +360,28 @@
             if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
                 const doc = data[google.picker.Response.DOCUMENTS][0];
                 const taskId = document.getElementById('editingTaskId').value;
+                await fetch('/api/files', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({projectId:currentProjectId, task_id:taskId, name:doc.name, url:doc.url, type:'file'}) });
                 
-                // Salvar arquivo vinculado à tarefa
-                await fetch('/api/files', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ 
-                        projectId: currentProjectId, 
-                        task_id: taskId, // IMPORTANTE: Vincula à tarefa
-                        name: doc.name, 
-                        url: doc.url, 
-                        type: doc.type === 'photo' ? 'image' : 'file' 
-                    })
-                });
-                
-                // Recarrega lista de arquivos localmente
                 const fRes = await fetch(`/api/files?projectId=${currentProjectId}`);
                 currentFiles = await fRes.json();
-                renderAttachmentList(taskId);
+                renderAttachments(taskId);
+                renderKanban(); // Atualiza icone clips
             }
         }
 
-        // --- UTILS ---
-        async function deleteFile(id) {
-            if(confirm("Remover anexo?")) {
-                await fetch(`/api/files?id=${id}`, {method:'DELETE'});
-                const fRes = await fetch(`/api/files?projectId=${currentProjectId}`);
-                currentFiles = await fRes.json();
-                renderAttachmentList(document.getElementById('editingTaskId').value);
-            }
-        }
+        // --- UTILITÁRIOS ---
+        async function deleteFile(id) { if(confirm("Apagar anexo?")) { await fetch(`/api/files?id=${id}`, {method:'DELETE'}); const f=await fetch(`/api/files?projectId=${currentProjectId}`); currentFiles=await f.json(); renderAttachments(document.getElementById('editingTaskId').value); renderKanban(); }}
+        async function deleteCurrentTask() { if(confirm("Apagar tarefa?")) { await fetch(`/api/tasks?id=${document.getElementById('editingTaskId').value}`, {method:'DELETE'}); closeModal(); loadProject(currentProjectId, document.getElementById('currentProjectTitle').innerText); }}
         
         function allowDrop(e){e.preventDefault();}
         async function drop(e,s){e.preventDefault();const id=e.dataTransfer.getData("text/plain");if(id){await fetch('/api/tasks',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,status:s})});loadProject(currentProjectId,document.getElementById('currentProjectTitle').innerText);}}
-        function renderProjectList(){const l=document.getElementById('projectList');l.innerHTML='';projects.forEach(p=>{const li=document.createElement('li');li.className=`project-item ${p.id==currentProjectId?'active':''}`;li.innerHTML=`<span>${p.name}</span>`;li.onclick=()=>loadProject(p.id,p.name);l.appendChild(li);});}
-        async function createNewProject(){const n=prompt("Nome:");if(n){await fetch('/api/projects',{method:'POST',body:JSON.stringify({name:n})});location.reload();}}
+        
+        function switchView(v, btn){ document.querySelectorAll('.view-container').forEach(e=>e.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); if(v==='calendar') renderCalendar(); }
         function closeModal(){document.getElementById('taskModal').style.display='none';}
+        function changeMonth(d){currentDate.setMonth(currentDate.getMonth()+d); renderCalendar();}
+        function renderProjectList(){const l=document.getElementById('projectList'); l.innerHTML=''; projects.forEach(p=>{const li=document.createElement('li');li.className=`project-item ${p.id==currentProjectId?'active':''}`;li.innerText=p.name;li.onclick=()=>loadProject(p.id,p.name);l.appendChild(li);});}
+        async function createNewProject(){const n=prompt("Nome:");if(n){await fetch('/api/projects',{method:'POST',body:JSON.stringify({name:n})});location.reload();}}
         function formatDate(s){if(!s)return'';const[y,m,d]=s.split('-');return`${d}/${m}`;}
-
     </script>
 </body>
 </html>
